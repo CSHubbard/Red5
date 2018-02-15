@@ -31,6 +31,6 @@ public class MainActivity extends AppCompatActivity implements Orientation.Liste
 
     @Override
     public void onOrientationChanged(float pitch, float roll) {
-        mAttitudeIndicator.setAttitude(pitch, roll);
+        mAttitudeIndicator.setAttitude(pitch, -1*roll);
     }
 }
