@@ -1,0 +1,1 @@
+Rotation sensor code from MIT license https://github.com/kplatfoot/android-rotation-sensor-sample
