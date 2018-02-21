@@ -3,7 +3,7 @@ var path = require('path');
 
 var app = express();
 //port for communication
-const PORT = 4000;
+const PORT = 5000;
 
 //set static path
 app.use(express.static(path.join(__dirname, 'public')));
@@ -29,13 +29,16 @@ var svr = net.createServer(function(sock) {
 	
 	// a callback called every time the client sends a message. 
     sock.on('data', function(data) {
-        for (var i=0; i<sockets.length ; i++) {
-            if (sockets[i] != sock) {
-                if (sockets[i]) {
-                    sockets[i].write(data);
-                }
-            }
-        }
+        // for (var i=0; i<sockets.length ; i++) {
+            // if (sockets[i] != sock) {
+                // if (sockets[i]) {
+                    // sockets[i].write(data);
+                // }
+            // }
+        // }
+		
+		//doing stuff with the data revived from the client will go here!
+		console.log(data);
     });
 	
 	// a callback called when the client disconnects from the server.
@@ -48,6 +51,7 @@ var svr = net.createServer(function(sock) {
     });
 });
 
+//var svraddr = '127.0.0.1';
 var svraddr = '192.168.0.8';
 var svrport = 1234;
 
