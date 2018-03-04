@@ -5,15 +5,13 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 import android.widget.ToggleButton;
-
-
 import java.net.URISyntaxException;
-
 import io.socket.client.IO;
 import io.socket.client.Socket;
 
@@ -21,7 +19,7 @@ import io.socket.client.Socket;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class ServerConnect extends Activity {
+public class ServerConnect extends Activity implements Orientation.Listener{
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -43,6 +41,8 @@ public class ServerConnect extends Activity {
     private View mContentView;
     private View mControlsView;
     private boolean mVisible;
+    private Orientation mOrientation;
+    private AttitudeIndicator mAttitudeIndicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +53,8 @@ public class ServerConnect extends Activity {
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
-
+        mOrientation = new Orientation(this);
+        mAttitudeIndicator = findViewById(R.id.fullscreen_content);
 
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
@@ -188,15 +189,30 @@ public class ServerConnect extends Activity {
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
 
-    //Create Socket
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mOrientation.startListening(this);
+    }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mOrientation.stopListening();
+    }
+
+    @Override
+    public void onOrientationChanged(float pitch, float roll) {
+        mAttitudeIndicator.setAttitude(pitch, roll);
+    }
+
+    //Create Socket
     public Socket mSocket = null;
     private void createSocket(){
         try {
-                mSocket = IO.socket("http://10.0.2.2:3000");
+                mSocket = IO.socket("http://sidharth-pc:3000");
             } catch (URISyntaxException e) {mSocket = null;}
     }
-
     //Connect Socket to Server
     private void connectServer(){
         // Connection Start Toast
@@ -206,10 +222,15 @@ public class ServerConnect extends Activity {
         createSocket();
         //Connect to nodeJS server here
         mSocket.connect();
-        //Send data to nodeJS server here
-        // INSERT
+        //Send data to NodeJS server
+        sendData();
     }
-
+    //Send Data to nodeJS Server
+    private void sendData(){
+        //NEED TO PACKAGE INTO JSON
+        mSocket.emit("pushData", Float.toString(mAttitudeIndicator.getPitch()));
+        mSocket.emit("pushData", mAttitudeIndicator.getRoll());
+    }
     //Disconnect Socket from Server
     private void disconnectServer(){
         //Disconnect Toast

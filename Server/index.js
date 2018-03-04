@@ -22,17 +22,10 @@ io.on('connection', function(client){
 	client.on('disconnect', function(){
 		console.log('Client disconnected...');
 	});
-	/*
-	client.on('join', function(data){
+	//Receive data from Android App
+	client.on('pushData', function(data){
 		console.log(data);
 	});
-	
-	
-	client.on('messages', function(data){
-		client.emit('broad', data);
-		client.broadcast.emit('broad', data);
-		console.log(data);
-	});
-	
-	*/
+	//Send data to Drone
+		//INSERT DRONE STUFF HERE
 });

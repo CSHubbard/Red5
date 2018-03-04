@@ -5,3 +5,7 @@ Workspace in Android Studio
 
 Socket.IO API
 https://github.com/socketio/socket.io-client-java
+https://socket.io/blog/native-socket-io-and-android/
+
+Rotation sensor code from MIT license
+https://github.com/kplatfoot/android-rotation-sensor-sample

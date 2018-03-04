@@ -13,7 +13,7 @@
          <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
         <script src="/socket.io/socket.io.js"></script>     
 		<script>  
-			var socket = io.connect('http://localhost:3000');
+			var socket = io.connect('http://192.168.1.230:3000');
 			socket.on('connect', function(data) {
 				socket.emit('join', 'Hello World from client');
 			});
