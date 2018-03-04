@@ -4,6 +4,7 @@
 
     <string name="title_activity_server_control">ServerControl</string>
     <string name="server_connect">Connect to Server</string>
+    <string name="server_disconnect">Disconnect from Server</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
 
     <string name="title_activity_server_connect">Server Connect</string>

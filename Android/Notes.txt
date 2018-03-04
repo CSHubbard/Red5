@@ -1,0 +1,7 @@
+
+Created by Sidharth Bambah
+
+Workspace in Android Studio
+
+Socket.IO API
+https://github.com/socketio/socket.io-client-java

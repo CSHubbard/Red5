@@ -20,7 +20,7 @@ public class MainActivity  extends AppCompatActivity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(getApplicationContext(), "Starting Drone Control", Toast.LENGTH_LONG)
+                Toast.makeText(getApplicationContext(), "Starting Drone Control", Toast.LENGTH_SHORT)
                         .show();
                 openServerConnect();
             }

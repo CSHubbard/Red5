@@ -7,6 +7,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.Toast;
+import android.widget.ToggleButton;
+
+
+import java.net.URISyntaxException;
+
+import io.socket.client.IO;
+import io.socket.client.Socket;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -54,10 +63,23 @@ public class ServerConnect extends Activity {
             }
         });
 
+        //Getting the button
+        ToggleButton toggle = findViewById(R.id.serverStartEnd);
+        toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    connectServer();
+                } else {
+                    disconnectServer();
+                }
+            }
+        });
+
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+        findViewById(R.id.serverStartEnd).setOnTouchListener(mDelayHideTouchListener);
+
     }
 
     @Override
@@ -164,5 +186,36 @@ public class ServerConnect extends Activity {
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    //Create Socket
+
+    public Socket mSocket = null;
+    private void createSocket(){
+        try {
+                mSocket = IO.socket("http://10.0.2.2:3000");
+            } catch (URISyntaxException e) {mSocket = null;}
+    }
+
+    //Connect Socket to Server
+    private void connectServer(){
+        // Connection Start Toast
+        Toast.makeText(getApplicationContext(), "Connecting to Server", Toast.LENGTH_SHORT)
+                .show();
+        //Create Socket
+        createSocket();
+        //Connect to nodeJS server here
+        mSocket.connect();
+        //Send data to nodeJS server here
+        // INSERT
+    }
+
+    //Disconnect Socket from Server
+    private void disconnectServer(){
+        //Disconnect Toast
+        Toast.makeText(getApplicationContext(), "Disconnecting Server", Toast.LENGTH_SHORT)
+                .show();
+        //Disconnect from nodeJS server here
+        mSocket.disconnect();
     }
 }
