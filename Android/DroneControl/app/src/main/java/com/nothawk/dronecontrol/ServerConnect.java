@@ -203,14 +203,19 @@ public class ServerConnect extends Activity implements Orientation.Listener{
 
     @Override
     public void onOrientationChanged(float pitch, float roll) {
+        roll = -1 * roll;
         mAttitudeIndicator.setAttitude(pitch, roll);
+        //sendData(pitch, roll);
     }
 
     //Create Socket
     public Socket mSocket = null;
     private void createSocket(){
         try {
-                mSocket = IO.socket("http://sidharth-pc:3000");
+                //To make this work open your local port 3000 to TCP connections
+                //and then find your host name.
+                //The format below is http://YOUR_PC's_HOSTNAME:PORT_NUM
+                mSocket = IO.socket("http://Normandy:3000");
             } catch (URISyntaxException e) {mSocket = null;}
     }
 
@@ -226,23 +231,25 @@ public class ServerConnect extends Activity implements Orientation.Listener{
         mSocket.connect();
         mSocket.emit("join", "Android"); //Join Android room
         //Send data to nodeJS Server every second
-        handler.postDelayed(runnable, 1000);
+        //handler.postDelayed(runnable, 1000);
+        //Send data to nodeJS Server on connect
+        sendData(mAttitudeIndicator.getPitch(), mAttitudeIndicator.getRoll());
     }
 
     //Initialize handler to send data every second
-    Handler handler = new Handler();
+/*    Handler handler = new Handler();
     Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            sendData();
+            sendData(mAttitudeIndicator.getPitch(), mAttitudeIndicator.getRoll());
             handler.postDelayed(this, 1000);
         }
-    };
+    };*/
 
     //Package data into JSON and send
-    private void sendData(){
+    private void sendData(float pitch, float roll){
         //Collect Data
-        GyroscopeData data = new GyroscopeData(mAttitudeIndicator.getPitch(), mAttitudeIndicator.getRoll());
+        OrientationData data = new OrientationData(pitch, roll);
         Gson gson = new Gson();
         String json = gson.toJson(data);
         Log.d("test", json);
@@ -256,7 +263,7 @@ public class ServerConnect extends Activity implements Orientation.Listener{
         Toast.makeText(getApplicationContext(), "Disconnecting Server", Toast.LENGTH_SHORT)
                 .show();
         //Stop sending data
-        handler.removeCallbacks(runnable);
+        //handler.removeCallbacks(runnable);
         //Disconnect from nodeJS server here
         mSocket.disconnect();
     }
