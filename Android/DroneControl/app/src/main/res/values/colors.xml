@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#D45113</color>
+    <color name="colorPrimaryDark">#b1436e</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="primary_material_light_1">#bf531f</color>
+    <color name="accent_material_dark">#977082</color>
+    <color name="primary_material_dark">#D45113</color>
+    <color name="primary_dark_material_dark">#a6640d</color>
+    <color name="background_material_dark">#171414</color>
+    <color name="primary_text_default_material_dark">#e6faf5</color>
+
+    <color name="black_overlay">#66000000</color>
+</resources>
