@@ -1,5 +1,0 @@
-
--Gyroscope data is only sent once upon server connect
-	Need to make it send in real time
-	Maybe every 1s or so
-	

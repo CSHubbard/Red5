@@ -213,6 +213,8 @@ public class ServerConnect extends Activity implements Orientation.Listener{
                 mSocket = IO.socket("http://sidharth-pc:3000");
             } catch (URISyntaxException e) {mSocket = null;}
     }
+
+
     //Connect Socket to Server
     private void connectServer(){
         // Connection Start Toast
@@ -222,10 +224,21 @@ public class ServerConnect extends Activity implements Orientation.Listener{
         createSocket();
         //Connect to nodeJS server here
         mSocket.connect();
-        //Send data to NodeJS server
-        sendData();
+        //Send data to nodeJS Server every second
+        handler.postDelayed(runnable, 1000);
     }
-    //Send Data to nodeJS Server
+
+    //Initialize handler to send data every second
+    Handler handler = new Handler();
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            sendData();
+            handler.postDelayed(this, 1000);
+        }
+    };
+
+    //Package data into JSON and send
     private void sendData(){
         //Collect Data
         GyroscopeData data = new GyroscopeData(mAttitudeIndicator.getPitch(), mAttitudeIndicator.getRoll());
@@ -235,11 +248,14 @@ public class ServerConnect extends Activity implements Orientation.Listener{
         //Send JSON to server
         mSocket.emit("pushData", json);
     }
+
     //Disconnect Socket from Server
     private void disconnectServer(){
         //Disconnect Toast
         Toast.makeText(getApplicationContext(), "Disconnecting Server", Toast.LENGTH_SHORT)
                 .show();
+        //Stop sending data
+        handler.removeCallbacks(runnable);
         //Disconnect from nodeJS server here
         mSocket.disconnect();
     }
