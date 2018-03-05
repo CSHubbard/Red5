@@ -224,6 +224,7 @@ public class ServerConnect extends Activity implements Orientation.Listener{
         createSocket();
         //Connect to nodeJS server here
         mSocket.connect();
+        mSocket.emit("join", "Android"); //Join Android room
         //Send data to nodeJS Server every second
         handler.postDelayed(runnable, 1000);
     }

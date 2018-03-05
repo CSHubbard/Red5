@@ -1,8 +1,5 @@
 package com.nothawk.dronecontrol;
 
-/**
- * Created by Sidharth Bambah on 3/4/2018.
- */
 
 public class GyroscopeData {
     public float pitch;

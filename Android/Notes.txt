@@ -1,5 +1,4 @@
 
-Created by Sidharth Bambah
 
 Workspace in Android Studio
 
@@ -9,3 +8,6 @@ https://socket.io/blog/native-socket-io-and-android/
 
 Rotation sensor code from MIT license
 https://github.com/kplatfoot/android-rotation-sensor-sample
+
+GSON Examples
+https://github.com/google/gson/blob/master/UserGuide.md

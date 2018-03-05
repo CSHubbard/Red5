@@ -23,10 +23,16 @@ io.on('connection', function(client){
 	client.on('disconnect', function(){
 		console.log('Client disconnected...');
 	});
-	//Receive data from Android App
-	client.on('pushData', function(data){
-		console.log(data);
+	client.on('join', function(room){
+		client.join(room);
+		console.log(room + ' client joined!');
 	});
-	//Send data to Drone
+	//Receive data from clients in "Android" room
+	client.on('pushData', function(data){
+		console.log(data); //Prints gyroscope data
+		//DO SOMETHING WITH THE DATA FROM GYROSCOPE HERE
+	});
+	//Send data to clients "Drone" room
 		//INSERT DRONE STUFF HERE
+		//io.sockets.in(Drone).emit(droneData);
 });
