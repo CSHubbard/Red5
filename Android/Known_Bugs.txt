@@ -3,5 +3,3 @@
 	Need to make it send in real time
 	Maybe every 1s or so
 	
--Gyroscope data should be packaged into a JSON object
-	Right now, pitch and roll are sent separately

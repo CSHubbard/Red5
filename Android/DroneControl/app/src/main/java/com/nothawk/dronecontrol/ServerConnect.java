@@ -14,7 +14,7 @@ import android.widget.ToggleButton;
 import java.net.URISyntaxException;
 import io.socket.client.IO;
 import io.socket.client.Socket;
-
+import com.google.gson.Gson;
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
@@ -227,9 +227,13 @@ public class ServerConnect extends Activity implements Orientation.Listener{
     }
     //Send Data to nodeJS Server
     private void sendData(){
-        //NEED TO PACKAGE INTO JSON
-        mSocket.emit("pushData", Float.toString(mAttitudeIndicator.getPitch()));
-        mSocket.emit("pushData", mAttitudeIndicator.getRoll());
+        //Collect Data
+        GyroscopeData data = new GyroscopeData(mAttitudeIndicator.getPitch(), mAttitudeIndicator.getRoll());
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        Log.d("test", json);
+        //Send JSON to server
+        mSocket.emit("pushData", json);
     }
     //Disconnect Socket from Server
     private void disconnectServer(){

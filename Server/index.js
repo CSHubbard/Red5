@@ -12,6 +12,7 @@ server.listen(port, function(){
 
 
 //Server send HTML file to client
+//This piece is only for testing the server with browsers
 app.get('/', function(req, res){
 	res.sendFile(__dirname + '/index.html');
 });
