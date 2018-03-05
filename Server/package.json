@@ -1,7 +1,7 @@
 {
   "name": "node_backend",
   "version": "1.0.0",
-  "description": "Gets gyroscope data from Android app and sends it to a drone.",
+  "description": "Simple server to interpret data received by the done-control app and convert it to drone commands",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,6 +9,7 @@
   "author": "nothawk",
   "license": "ISC",
   "dependencies": {
+    "ejs": "^2.5.6",
     "express": "^4.16.2",
     "socket.io": "^2.0.4"
   }
