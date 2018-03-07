@@ -4,5 +4,101 @@
   <% include ../partials/header.ejs %>
 </head>
 <body>
-	<div>Hello from the index.ejs file</div>
-</body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top header-footer">
+      <div class="container">
+        <a class="navbar-brand" href="#">Drone Control</a>
+		<small> A simple Server to receive & send drone commands </small>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+
+      <!-- Command Data-->
+	  <div class="text-center card semi-transparent w-50 mx-auto my-4 mb-5">
+		  <h1 class="mt-4">Last Data (Placeholder)
+		  </h1>
+		  <p class="font-med" id="curData"><%= ConnectionData.recievedData%></p>
+
+	  </div>
+
+
+      <!-- Connection Status -->
+      <div class="row">
+        <div class="col-lg-12">
+          <h2 class="my-4 text-center">Connection Status</h2>
+        </div>
+        <div class="col-lg-6 col-sm-6 text-center mb-4">
+          <img class="rounded-circle img-fluid d-block mx-auto" id="phoneConImage" src="../assets/disconnected.png" alt="../assets/connected.png">
+          <h3>Phone
+          </h3>
+          <p id="phoneConStatus"><%= ConnectionData.phoneConnectionStatus%></p>
+        </div>
+        <div class="col-lg-6 col-sm-6 text-center mb-4">
+          <img class="rounded-circle img-fluid d-block mx-auto" id="droneConImage" src="../assets/disconnected.png" alt="../assets/connected.png">
+          <h3>Drone
+          </h3>
+          <p id="droneConStatus"><%= ConnectionData.droneConnectionStatus%></p>
+        </div>
+      </div>
+    </div>
+    <!-- /.container -->
+
+    <!-- Footer -->
+    <footer class="py-3 header-footer fixed-bottom">
+      <div class="container">
+        <p class="m-0 text-center text-white">NotHawk - CSM117 2018</p>
+      </div>
+      <!-- /.container -->
+    </footer>
+  </body>
+
+
+<script>
+window.onload = function() {
+	var socket = io.connect('http://Normandy:3000');
+	socket.emit("join", "Server");
+	socket.on('update', function(data) {
+	type = data.type;
+	ConnectionData = data.conData;
+  
+	//function to switch image on connection/disconnection
+	function imgSwitch(imgElement) {
+		var temp = imgElement.src;
+		imgElement.src = imgElement.alt;
+		imgElement.alt = temp;
+	}
+	
+	//this large switch case handles are data update events on the webpage
+	//probably needs to be re-factored. Case names are descriptive.
+	switch(type) {
+			case "disconnection-phone":
+				imgSwitch(document.getElementById("phoneConImage"));
+				document.getElementById("phoneConStatus").innerHTML = ConnectionData.phoneConnectionStatus;
+				break;
+				
+			case "connection-phone":
+				imgSwitch(document.getElementById("phoneConImage"));
+				document.getElementById("phoneConStatus").innerHTML = ConnectionData.phoneConnectionStatus;
+				break;
+				
+			case "disconnection-drone":
+				imgSwitch(document.getElementById("droneConImage"));
+				document.getElementById("droneConStatus").innerHTML = ConnectionData.droneConnectionStatus;
+				break;
+				
+			case "connection-drone":
+				imgSwitch(document.getElementById("droneConImage"));
+				document.getElementById("droneConStatus").innerHTML = ConnectionData.droneConnectionStatus;
+				break;
+				
+			case "push": //when new orientation data is sent from the phone
+				document.getElementById("curData").innerHTML = ConnectionData.recievedData;
+				break;
+		}
+  });
+}
+</script>

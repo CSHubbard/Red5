@@ -205,7 +205,6 @@ public class ServerConnect extends Activity implements Orientation.Listener{
     public void onOrientationChanged(float pitch, float roll) {
         roll = -1 * roll;
         mAttitudeIndicator.setAttitude(pitch, roll);
-        //sendData(pitch, roll);
     }
 
     //Create Socket
@@ -230,21 +229,21 @@ public class ServerConnect extends Activity implements Orientation.Listener{
         //Connect to nodeJS server here
         mSocket.connect();
         mSocket.emit("join", "Android"); //Join Android room
-        //Send data to nodeJS Server every second
-        //handler.postDelayed(runnable, 1000);
+        //Send data to nodeJS Server every half-second
+        handler.postDelayed(runnable, 500);
         //Send data to nodeJS Server on connect
-        sendData(mAttitudeIndicator.getPitch(), mAttitudeIndicator.getRoll());
+        //sendData(mAttitudeIndicator.getPitch(), mAttitudeIndicator.getRoll());
     }
 
     //Initialize handler to send data every second
-/*    Handler handler = new Handler();
+    Handler handler = new Handler();
     Runnable runnable = new Runnable() {
         @Override
         public void run() {
             sendData(mAttitudeIndicator.getPitch(), mAttitudeIndicator.getRoll());
-            handler.postDelayed(this, 1000);
+            handler.postDelayed(this, 500);
         }
-    };*/
+    };
 
     //Package data into JSON and send
     private void sendData(float pitch, float roll){
@@ -263,8 +262,9 @@ public class ServerConnect extends Activity implements Orientation.Listener{
         Toast.makeText(getApplicationContext(), "Disconnecting Server", Toast.LENGTH_SHORT)
                 .show();
         //Stop sending data
-        //handler.removeCallbacks(runnable);
+        handler.removeCallbacks(runnable);
         //Disconnect from nodeJS server here
+        mSocket.emit("leave", "Android"); //Leave Android room
         mSocket.disconnect();
     }
 }
