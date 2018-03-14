@@ -341,7 +341,7 @@ public class MainActivity extends AppCompatActivity{
 
     public void close() {
         if (btGatt == null) {
-            return;C:\Users\Ben\AndroidStudioProjects\HelloWorld
+            return;
         }
         btGatt.close();
         btGatt = null;

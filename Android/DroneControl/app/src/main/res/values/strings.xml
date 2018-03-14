@@ -8,4 +8,10 @@
     <string name="dummy_content">DUMMY\nCONTENT</string>
 
     <string name="title_activity_server_connect">Server Connect</string>
+    <string name="arm_drone">Arm Drone</string>
+    <string name="unarm_drone">Unarm Drone</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="ble_not_supported">BLE is not supported</string>
+    <string name="manu_name">Crazepony</string>
 </resources>
