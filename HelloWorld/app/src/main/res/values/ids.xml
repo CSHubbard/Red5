@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="armButton" type="id">"@+id/armButton"</item>
+    <item name="connectButton" type="id">"@+id/connectButton"</item>
+    <item name="seekBar" type="id">"@+id/seekBar"</item>
+    <item name="textView2" type="id">"@+id/textView2"</item>
+</resources>
