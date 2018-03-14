@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
@@ -25,21 +26,31 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 import android.widget.Toast;
+
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.List;
 import java.util.ListIterator;
 
 public class MainActivity extends AppCompatActivity{
-    public  final int REQUEST_ENABLE_BT = 1;
-    public  static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
-    public  final int STATE_DISCONNECTED = 0;
+    public final int REQUEST_ENABLE_BT = 1;
+    public static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
+    public final int STATE_DISCONNECTED = 0;
     public final int STATE_CONNECTED = 2;
     public final static UUID UUID_NOTIFY =
             UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
     public final static UUID UUID_SERVICE =
             UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
-    public final static byte[] arm_string = {0x24, 0x4d, 0x3c, 0x08, -56, -36, 0x05, -36, 0x05, -48, 0x07, -24, 0x03, -4};
-    public final static byte[] disarm_string = {0x24, 0x4d, 0x3c, 0x08, -56, -36, 0x05, -36, 0x05, -24, 0x03, -24, 0x03, -64};
+    //$,M,<,<data size, 1 byte>,<command, 1 byte>, data, <checksum, 1 byte>
+    //checksum = all data bytes, data size, and command byte XORed\
+    //A confusing aspect of this is that bytes are constrained to -128, 127, so we can't just write in the actual positive hex values. Can do that in code though (as bits will be the same)
+    public  final static byte[] arm_string = {0x24, 0x4d, 0x3c, 0x08, -56, -36, 0x05, -36, 0x05, -48, 0x07, -24, 0x03, -4};
+    public  final static byte[] disarm_string = {0x24, 0x4d, 0x3c, 0x08, -56, -36, 0x05, -36, 0x05, -24, 0x03, -24, 0x03, -64};
+    public  final static byte[] base_raw_data_string = {0x24, 0x4d, 0x3c, 0x08, -56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, -64}; // checksum base is just 0xC8 (AKA -56) ^ 0x08 - XOR with data bytes
+    public  final static int    checksum_pos = 13;
+    public  final static int    data_pos = 5;
+    public  final static int    message_size = 14;
+
     private Context context;
 
     private BluetoothAdapter mBluetoothAdapter;
@@ -52,11 +63,15 @@ public class MainActivity extends AppCompatActivity{
     private BluetoothGatt btGatt;
     private BluetoothGattService main_service;
     private BluetoothGattCharacteristic main_characteristic;
+    private boolean ble_connected = false;
+    private boolean att_to_connect = false;
 
     //1000-2000, gonna keep centered at 1500
     private int yaw = 1500;
     private int pitch = 1500;
     private int roll = 1500;
+    private int throttle = 1000;
+    private boolean armed = false;
 
     ToggleButton armToggle;
     ToggleButton connectToggle;
@@ -125,7 +140,14 @@ public class MainActivity extends AppCompatActivity{
             }
         }
     }
-
+    final private Runnable sendData = new Runnable() {
+        public void run(){
+            if(armed){
+                send_raw_rc_data();
+                mHandler.postDelayed(sendData, 25);
+            }
+        }
+    };
     /* Listener for the toggle buttons (currently just arm and connect) */
     private final CompoundButton.OnCheckedChangeListener toggle_listener = new CompoundButton.OnCheckedChangeListener()
     {
@@ -136,10 +158,28 @@ public class MainActivity extends AppCompatActivity{
             case R.id.armButton:
                 if (isChecked) {
                     //arm drone
-                    writeCharacteristic(arm_string);
+                    if(writeCharacteristic(arm_string)) {
+                        armed = true;
+                        mHandler.postDelayed(sendData, 5000);
+
+                    }else{
+                        armToggle.setOnCheckedChangeListener(null);
+                        armToggle.setChecked(false);
+                        armToggle.setOnCheckedChangeListener(toggle_listener);
+                        Toast.makeText(context, "Make sure you're connected before attempting to arm",Toast.LENGTH_SHORT).show();
+                    }
                 } else {
                     //unarm drone
-                    writeCharacteristic(disarm_string);
+                    if(writeCharacteristic(disarm_string))
+                        armed = false;
+                    else{
+
+                        armToggle.setOnCheckedChangeListener(null);
+                        armToggle.setChecked(true);
+                        armToggle.setOnCheckedChangeListener(toggle_listener);
+                        Toast.makeText(context, "Make sure you're connected before attempting to disarm",Toast.LENGTH_SHORT).show();
+                    }
+
                 }
                 break;
             case R.id.connectButton:
@@ -148,6 +188,7 @@ public class MainActivity extends AppCompatActivity{
                 } else {
                     if(mBluetoothAdapter != null && btGatt != null){
                         btGatt.disconnect();
+                        close();
                     }
                     mHandler.postAtFrontOfQueue(stopScanner);
                 }
@@ -163,6 +204,7 @@ public class MainActivity extends AppCompatActivity{
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             // updated continuously as the user slides the thumb
             tvProgressLabel.setText("Throttle: " + (progress+1000));
+            throttle = progress + 1000;
         }
 
         @Override
@@ -212,12 +254,14 @@ public class MainActivity extends AppCompatActivity{
                 Toast.makeText(context, "Stopping scan, either timeout, Crazepony found, or manual", Toast.LENGTH_SHORT).show();
                 mScanning = false;
                 scanner.stopScan(scanCallback);
+                /* this isnt right most of the time */
                 connectToggle.setOnCheckedChangeListener(null);
                 connectToggle.setChecked(false);
                 connectToggle.setOnCheckedChangeListener(toggle_listener);
             }
         }
     };
+
 
     /* Callback for the BLE scan - checks if a Crazepony is found */
     private ScanCallback scanCallback = new ScanCallback() {
@@ -230,18 +274,26 @@ public class MainActivity extends AppCompatActivity{
                 tmp = result.getDevice();
 
                 if(tmp != null && tmp.getName()!= null){
-                    if(tmp.getName().equals("Crazepony")) {
+                    if(tmp.getName().equals("Crazepony") && !att_to_connect) {
                         target = result.getDevice();
-                        mHandler.postAtFrontOfQueue(stopScanner);
-                        Toast.makeText(context, "Found Crazepony drone, id " + target.getAddress() +" attempting to connect", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(context, "Found Crazepony drone, id " + target.getAddress() +" attempting to connect", Toast.LENGTH_SHORT).show();
+
                         connect(target);
-                    }else
-                    {
-                        Toast.makeText(context, "Found other thing, id " + tmp.getName(), Toast.LENGTH_SHORT).show();
+
+                        mHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run(){
+                                if(ble_connected){
+                                    mScanning = false;
+                                    mHandler.postAtFrontOfQueue(stopScanner);
+                                    att_to_connect = false;
+                                }
+                            }
+                        }, 5000);
+
+
                     }
                 }
-                //
-
             }
         }
 
@@ -263,31 +315,56 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
-    public void writeCharacteristic(byte[] data)
+    public boolean writeCharacteristic(byte[] data)
     {
         if(mBluetoothAdapter != null && btGatt != null) {
+
             main_characteristic.setValue(data);
             btGatt.writeCharacteristic(main_characteristic);
-        }
-    }
 
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run(){
+                    btGatt.readCharacteristic(main_characteristic);
+                    //could confirm that theyre identical here
+                }
+            }, 10);
+            return true;
+        }else
+            return false;
+    }
+    /*
+    public void delay_milli(int milliseconds){
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run(){
+                btGatt.readCharacteristic(main_characteristic);
+                //could confirm that theyre identical here
+            }
+        }, milliseconds);
+    }
+    */
     public BluetoothGattCallback btGattCb = new BluetoothGattCallback(){
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState)
         {
             super.onConnectionStateChange(gatt, status, newState);
-            if(newState== STATE_CONNECTED)
+            if(newState== STATE_CONNECTED && status == 0)
             {
                 System.out.println("Successfully connected to Crazepony, status "+status +" new state: " + newState);
+                ble_connected = true;
                 gatt.discoverServices();
             }
-            else if (newState == STATE_DISCONNECTED)
+            else if (newState == STATE_DISCONNECTED && status == 0)
             {
                 System.out.println("Successfully disconnected from Crazepony, status "+status);
+                ble_connected = false;
+                //close();
             }
             else{
                 System.out.println("Neither connect nor disconnected, status "+status);
-
+                ble_connected = false;
+                close();
             }
         }
         @Override
@@ -320,10 +397,10 @@ public class MainActivity extends AppCompatActivity{
             super.onCharacteristicChanged(gatt, characteristic);
         }
         @Override
-        public void onCharacteristicRead(BluetoothGatt gatt,
-                                         BluetoothGattCharacteristic characteristic, int status)
-        {
-            super.onCharacteristicRead(gatt, characteristic, status);
+        public void onDescriptorRead (BluetoothGatt gatt,
+                               BluetoothGattDescriptor descriptor,
+                               int status){
+            System.out.println("READING OUT: " + descriptor.getValue());
         }
         //Response from write operation
         @Override
@@ -336,6 +413,7 @@ public class MainActivity extends AppCompatActivity{
 
     public boolean connect(BluetoothDevice device){
         btGatt = device.connectGatt(this, true, btGattCb);
+        att_to_connect = true;
         return true;
     }
 
@@ -346,16 +424,29 @@ public class MainActivity extends AppCompatActivity{
         btGatt.close();
         btGatt = null;
     }
-/*
-4 16-bit channels (little endian) - Roll, pitch, yaw, throttle (from low to high index)
+
+    //4 16-bit channels (little endian) - Roll, pitch, yaw, throttle (from low to high index)
     public void send_raw_rc_data()
     {
+        byte[] msg = Arrays.copyOf(base_raw_data_string, message_size);
 
+        //incredible code
+        msg[data_pos]  |= (byte)(roll      & 0x00FF);
+        msg[data_pos+1]|= (byte)(roll >> 8 & 0x00FF);
+        msg[data_pos+2]|= (byte)(pitch     & 0x00FF);
+        msg[data_pos+3]|= (byte)(pitch >> 8 & 0x00FF);
+        msg[data_pos+4]|= (byte)(yaw      & 0x00FF);
+        msg[data_pos+5]|= (byte)(yaw  >>8    & 0x00FF);
+        msg[data_pos+6]|= (byte)(throttle & 0x00FF);
+        msg[data_pos+7]|= (byte)(throttle >> 8 & 0x00FF);
+
+        //more incredible code
+        msg[checksum_pos] ^= (byte)(msg[data_pos] ^ msg[data_pos+1] ^ msg[data_pos+2] ^ msg[data_pos+3] ^ msg[data_pos+4]
+                            ^ msg[data_pos+5] ^ msg[data_pos+6] ^ msg[data_pos+7]);
+        for(int i = 0; i < msg.length; i++){
+            System.out.print(msg[i] + " ");
+        }
+        System.out.println();
+           writeCharacteristic(msg);
     }
-
-    public byte calculate_checksum(byte[] message, int len)
-    {
-
-    }
-    */
 }
