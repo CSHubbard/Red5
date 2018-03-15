@@ -1,4 +1,4 @@
-#Drone Control
+# Drone Control
 
 The purpose of this application and server combination is to use the gyroscope
 and acceleration sensors of an Android device to control the movements of a
@@ -7,9 +7,9 @@ API 19 and above. For now, the nodeJS server must be run on a local machine.
 Finally, Bluetooth and Wi-Fi capabilities must be present in the Android
 device.
 
-##How to Run the Code
+## How to Run the Code
 
-###Android
+### Android
 	1. Pull Github Repository
 	2. Import Android App into Android Studio
 	3. Create an emulator with minimum Android API 19, or connect a compatible
@@ -21,7 +21,7 @@ device.
 	8. Control Drone!!!!
 	9. Disconnect when finished
 	
-###NodeJS Server
+### NodeJS Server
 	1. Open TCP port 3000 in computer's firewall
 	2. Install NodeJS
 	3. In a terminal window, navigate to the folder where index.js is stored.
